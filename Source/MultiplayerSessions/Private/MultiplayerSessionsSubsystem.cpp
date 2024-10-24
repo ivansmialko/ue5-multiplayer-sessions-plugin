@@ -5,6 +5,7 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "Online/OnlineSessionNames.h"
 
 UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 	CreateSessionCompleteDelegate{ FOnCreateSessionCompleteDelegate::CreateUObject(this, &UMultiplayerSessionsSubsystem::OnCreateSessionComplete) },
