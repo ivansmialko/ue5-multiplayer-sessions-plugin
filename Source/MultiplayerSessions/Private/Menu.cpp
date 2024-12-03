@@ -98,18 +98,26 @@ void UMenu::OnFindSession(const TArray<FOnlineSessionSearchResult>& SearchResult
 		LogError(TEXT("Failed to find sessions"));
 		return;
 	}
+	else
+	{
+		LogSuccess(TEXT("Session found"));
+	}
 
 	if(!MultiplayerSessionsSubsystem)
 		return;
 
 	for (const auto Result : SearchResults)
 	{
+
+		LogSuccess(TEXT("Trying to connect"));
+
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
 
 		if(SettingsValue != MatchType)
 			continue;
 
+		LogSuccess(TEXT("Connecting"));
 		MultiplayerSessionsSubsystem->JoinSession(Result);
 		return;
 	}
@@ -130,17 +138,26 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 		JoinButton->SetIsEnabled(true);
 		return;
 	}
+	
+	LogSuccess(TEXT("Joining session"));
 
-	if(MultiplayerSessionsSubsystem)
+	if(!MultiplayerSessionsSubsystem)
 		return;
+
+	LogSuccess(TEXT("Subsystem available"));
 
 	if(!GetGameInstance())
 		return;
+
+	LogSuccess(TEXT("Game instance available"));
 
 	APlayerController* PlayerController{ GetGameInstance()->GetFirstLocalPlayerController() };
 	if(!PlayerController)
 		return;
 
+	LogSuccess(TEXT("Client travel"));
+
+	LogSuccess(MultiplayerSessionsSubsystem->GetSessionAddress());
 	PlayerController->ClientTravel(MultiplayerSessionsSubsystem->GetSessionAddress(), ETravelType::TRAVEL_Absolute);
 }
 
@@ -162,6 +179,7 @@ void UMenu::OnHostButtonClicked()
 	if(!MultiplayerSessionsSubsystem)
 		return;
 
+
 	//Create session using plugin
 	MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
 
@@ -173,6 +191,7 @@ void UMenu::OnJoinButtonClicked()
 	if(!MultiplayerSessionsSubsystem)
 		return;
 
+	LogSuccess(TEXT("Searching for seassion started"));
 	MultiplayerSessionsSubsystem->FindSessions(10000);
 
 	HostButton->SetIsEnabled(false);

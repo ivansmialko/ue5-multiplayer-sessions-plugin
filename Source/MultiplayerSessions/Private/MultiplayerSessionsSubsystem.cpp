@@ -73,6 +73,8 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
+	LogSuccess(TEXT("SUBSYSTEM: Searching for seassion started"));
+
 	if(!SessionInterface.IsValid())
 		return;
 
@@ -80,6 +82,8 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
 	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
 	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+	LogSuccess(FString::Printf(TEXT("SUBSYSTEM: Is lan query: %d"), LastSessionSearch->bIsLanQuery));
 
 	if(!GetWorld())
 		return;
@@ -105,6 +109,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
 	}
 
+	LogSuccess(TEXT("SUBSYSTEM: Connection"));
 
 	if (!GetWorld())
 		return;
@@ -174,6 +179,8 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessfull)
 	if(!SessionInterface.IsValid())
 		return;
 
+	LogSuccess(TEXT("SUBSYSTEM: Finding finished"));
+
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
 	//Broadcast our own custom delegate
@@ -208,4 +215,38 @@ void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, 
 void UMultiplayerSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessfull)
 {
 
+}
+
+void UMultiplayerSessionsSubsystem::LogError(FString ErrorText)
+{
+	DebugLog(ErrorText, FColor::Red);
+}
+
+void UMultiplayerSessionsSubsystem::LogWarning(FString WarningText)
+{
+	DebugLog(WarningText, FColor::Yellow);
+}
+
+void UMultiplayerSessionsSubsystem::LogSuccess(FString SuccessText)
+{
+	DebugLog(SuccessText, FColor::Green);
+}
+
+void UMultiplayerSessionsSubsystem::LogVerbose(FString VerboseText)
+{
+	DebugLog(VerboseText, FColor::Cyan);
+}
+
+void UMultiplayerSessionsSubsystem::DebugLog(FString Text, FColor Color)
+{
+	if (!GEngine)
+		return;
+
+	GEngine->AddOnScreenDebugMessage
+	(
+		-1,
+		10.f,
+		Color,
+		Text
+	);
 }
