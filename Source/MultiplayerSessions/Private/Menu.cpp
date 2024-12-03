@@ -157,7 +157,11 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 
 	LogSuccess(TEXT("Client travel"));
 
-	LogSuccess(MultiplayerSessionsSubsystem->GetSessionAddress());
+	FString SessionAddress{ MultiplayerSessionsSubsystem->GetSessionAddress() };
+	LogSuccess(SessionAddress);
+
+	UE_LOG(LogTemp, Warning, TEXT("Address: "), *SessionAddress);
+
 	PlayerController->ClientTravel(MultiplayerSessionsSubsystem->GetSessionAddress(), ETravelType::TRAVEL_Absolute);
 }
 
