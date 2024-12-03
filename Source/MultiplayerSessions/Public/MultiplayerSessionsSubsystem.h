@@ -78,4 +78,10 @@ private:
 	FDelegateHandle JoinSessionCompleteDelegate_Handle;
 	FDelegateHandle DestroySessionCompleteDelegate_Handle;
 	FDelegateHandle StartSessionCompleteDelegate_Handle;
+
+	void LogError(FString ErrorText);
+	void LogWarning(FString WarningText);
+	void LogSuccess(FString SuccessText);
+	void LogVerbose(FString VerboseText);
+	void DebugLog(FString Text, FColor Color);
 };
