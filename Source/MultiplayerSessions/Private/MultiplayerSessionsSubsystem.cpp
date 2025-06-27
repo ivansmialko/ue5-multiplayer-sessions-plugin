@@ -24,8 +24,12 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 
 void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString MatchType)
 {
-	if(!SessionInterface.IsValid())
+	if (!SessionInterface.IsValid())
+	{
+		// Broadcast failed
+		MultiplayerOnCreateSessionComplete.Broadcast(false);
 		return;
+	}
 
 	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession)
