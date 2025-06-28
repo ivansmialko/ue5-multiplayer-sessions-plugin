@@ -78,10 +78,14 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
-	LogSuccess(TEXT("SUBSYSTEM: Searching for seassion started"));
+	LogSuccess(TEXT("Searching for seassion started"));
 
-	if(!SessionInterface.IsValid())
+	if (!SessionInterface.IsValid())
+	{
+		MultiplayerOnFindSessionComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+		LogError(TEXT("No session interface available"));
 		return;
+	}
 
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
@@ -90,7 +94,7 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	LastSessionSearch->QuerySettings.Set(FName("GameName"), FString("ShooterJam"), EOnlineComparisonOp::Equals);
 
 
-	LogSuccess(FString::Printf(TEXT("SUBSYSTEM: Is lan query: %d"), LastSessionSearch->bIsLanQuery));
+	LogSuccess(FString::Printf(TEXT("Is lan query: %d"), LastSessionSearch->bIsLanQuery));
 
 	if(!GetWorld())
 		return;
@@ -116,7 +120,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
 	}
 
-	LogSuccess(TEXT("SUBSYSTEM: Connection"));
+	LogSuccess(TEXT("Connection"));
 
 	if (!GetWorld())
 		return;
@@ -157,6 +161,11 @@ void UMultiplayerSessionsSubsystem::StartSession()
 
 }
 
+void UMultiplayerSessionsSubsystem::SetLogToScreen(bool bInLogToScreen)
+{
+	bLogToScreen = bInLogToScreen;
+}
+
 FString UMultiplayerSessionsSubsystem::GetSessionAddress()
 {
 	if (!SessionInterface.IsValid())
@@ -186,7 +195,7 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessfull)
 	if(!SessionInterface.IsValid())
 		return;
 
-	LogSuccess(TEXT("SUBSYSTEM: Finding finished"));
+	LogSuccess(TEXT("Finding finished"));
 
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate_Handle);
 
@@ -248,12 +257,22 @@ void UMultiplayerSessionsSubsystem::DebugLog(FString Text, FColor Color)
 {
 	if (!GEngine)
 		return;
+	
+	FString LogText = FString::Printf(TEXT("MULTIPLAYER SUBSYSTEM: %s"), *Text);
 
-	GEngine->AddOnScreenDebugMessage
-	(
-		-1,
-		10.f,
-		Color,
-		Text
-	);
+	if (bLogToScreen)
+	{
+		GEngine->AddOnScreenDebugMessage
+		(
+			-1,
+			10.f,
+			Color,
+			LogText
+		);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *LogText);
+	}
+
 }

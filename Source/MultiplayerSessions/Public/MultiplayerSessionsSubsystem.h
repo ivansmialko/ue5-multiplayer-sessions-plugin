@@ -36,6 +36,8 @@ public:
 	void DestroySession();
 	void StartSession();
 
+	void SetLogToScreen(bool bInLogToScreen);
+
 	FString GetSessionAddress();
 
 	///
@@ -61,6 +63,7 @@ private:
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 	bool bCreateSessionOnDestroy{ false };
+	bool bLogToScreen{ false };
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
 
