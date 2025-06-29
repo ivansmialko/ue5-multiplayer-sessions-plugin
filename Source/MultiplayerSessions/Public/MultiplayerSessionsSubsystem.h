@@ -18,6 +18,13 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSe
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessfull);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessfull);
 
+struct FMultiplayerMatchSettings
+{
+	int32 PublicConnections{ 0 };
+	FString MatchType;
+	FString MatchName;
+};
+
 /**
  * 
  */
@@ -31,8 +38,10 @@ public:
 
 	//To handle session functionality the game will cal these
 	void CreateSession(int32 NumPublicConnections, FString MatchType);
+	void CreateSession(const FMultiplayerMatchSettings& InMatchSettings);
 	void FindSessions(int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& FindSessionsResult);
+	void JoinSession(const FString& InSessionId);
 	void DestroySession();
 	void StartSession();
 

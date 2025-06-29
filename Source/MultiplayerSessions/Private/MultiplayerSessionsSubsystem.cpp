@@ -76,6 +76,60 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	}
 }
 
+void UMultiplayerSessionsSubsystem::CreateSession(const FMultiplayerMatchSettings& InMatchSettings)
+{
+	if (!SessionInterface.IsValid())
+	{
+		// Broadcast failed
+		MultiplayerOnCreateSessionComplete.Broadcast(false);
+		return;
+	}
+
+	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+	if (ExistingSession)
+	{
+		bCreateSessionOnDestroy = true;
+		LastNumPublicConnections = InMatchSettings.PublicConnections;
+		LastMatchType = InMatchSettings.MatchType;
+	}
+
+	//Fill session settings
+	LastSessionSettings = MakeShareable(new FOnlineSessionSettings);
+	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
+	LastSessionSettings->NumPublicConnections = InMatchSettings.PublicConnections;
+	LastSessionSettings->bAllowJoinInProgress = true;
+	LastSessionSettings->bAllowJoinViaPresence = true;
+	LastSessionSettings->bUsesPresence = true;
+	LastSessionSettings->bShouldAdvertise = true;
+	LastSessionSettings->bUseLobbiesIfAvailable = true;
+	LastSessionSettings->Set(FName("MatchType"), InMatchSettings.MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("MatchName"), InMatchSettings.MatchName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("GameName"), FString("ShooterJam"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->BuildUniqueId = 1;
+
+	UWorld* World{ GetWorld() };
+	if (!World)
+		return;
+
+	const ULocalPlayer* LocalPlayer{ World->GetFirstLocalPlayerFromController() };
+	if (!LocalPlayer)
+		return;
+
+	//Store the delegate in a FDelegateHandle so we can later remove it from the delegate list
+	CreateSessionCompleteDelegate_Handle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+
+	//Create session
+	bool bWasSuccessfull = SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings);
+	if (!bWasSuccessfull)
+	{
+		//If session creation was failed - remove delegate from SessionInterface
+		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate_Handle);
+
+		// Broadcast our own custom delegate
+		MultiplayerOnCreateSessionComplete.Broadcast(false);
+	}
+}
+
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
 	LogSuccess(TEXT("Searching for seassion started"));
@@ -90,7 +144,7 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
 	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
-	//LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	LastSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 	LastSessionSearch->QuerySettings.Set(FName("GameName"), FString("ShooterJam"), EOnlineComparisonOp::Equals);
 
 
@@ -135,6 +189,17 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 	{
 		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate_Handle);
 		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+	}
+}
+
+void UMultiplayerSessionsSubsystem::JoinSession(const FString& InSessionId)
+{
+	for (const FOnlineSessionSearchResult& SearchResult : LastSessionSearch->SearchResults)
+	{
+		if (SearchResult.GetSessionIdStr() == InSessionId)
+		{
+			JoinSession(SearchResult);
+		}
 	}
 }
 
