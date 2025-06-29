@@ -132,7 +132,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(const FMultiplayerMatchSetting
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
-	LogSuccess(TEXT("Searching for seassion started"));
+	LogVerbose(TEXT("Searching for sessions"));
 
 	if (!SessionInterface.IsValid())
 	{
@@ -148,7 +148,7 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	LastSessionSearch->QuerySettings.Set(FName("GameName"), FString("ShooterJam"), EOnlineComparisonOp::Equals);
 
 
-	LogSuccess(FString::Printf(TEXT("Is lan query: %d"), LastSessionSearch->bIsLanQuery));
+	LogVerbose(FString::Printf(TEXT("Is lan query: %d"), LastSessionSearch->bIsLanQuery));
 
 	if(!GetWorld())
 		return;
@@ -174,7 +174,7 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
 	}
 
-	LogSuccess(TEXT("Connection"));
+	LogVerbose(TEXT("Connecting.."));
 
 	if (!GetWorld())
 		return;
@@ -194,6 +194,14 @@ void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult
 
 void UMultiplayerSessionsSubsystem::JoinSession(const FString& InSessionId)
 {
+	LogVerbose(FString::Printf(TEXT("Trying to join using session id %s"), *InSessionId));
+
+	if (!LastSessionSearch.IsValid())
+	{
+		LogVerbose(FString::Printf(TEXT("Failed to join using session id %s, not found on search list"), *InSessionId));
+		return;
+	}
+
 	for (const FOnlineSessionSearchResult& SearchResult : LastSessionSearch->SearchResults)
 	{
 		if (SearchResult.GetSessionIdStr() == InSessionId)
@@ -337,7 +345,17 @@ void UMultiplayerSessionsSubsystem::DebugLog(FString Text, FColor Color)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *LogText);
+		if (Color == FColor::Red)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s"), *LogText);
+		}
+		else if (Color == FColor::Yellow)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *LogText);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("%s"), *LogText);
+		}
 	}
-
 }
