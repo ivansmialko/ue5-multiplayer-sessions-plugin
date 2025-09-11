@@ -48,6 +48,8 @@ public:
 	void SetLogToScreen(bool bInLogToScreen);
 
 	FString GetSessionAddress();
+	bool GetIsLanMatch() const;
+	bool GetOnlineSubsystemAvailable() const;
 
 	///
 	/// Our own custom delegates for the menu class to bind callbacks to

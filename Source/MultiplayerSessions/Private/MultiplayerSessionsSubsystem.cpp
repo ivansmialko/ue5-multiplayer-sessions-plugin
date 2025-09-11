@@ -4,6 +4,7 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Online/OnlineSessionNames.h"
 
@@ -95,7 +96,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(const FMultiplayerMatchSetting
 
 	//Fill session settings
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings);
-	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
+	LastSessionSettings->bIsLANMatch = Online::GetSubsystem(GetWorld())->GetSubsystemName() == "NULL";
 	LastSessionSettings->NumPublicConnections = InMatchSettings.PublicConnections;
 	LastSessionSettings->bAllowJoinInProgress = true;
 	LastSessionSettings->bAllowJoinViaPresence = true;
@@ -250,6 +251,16 @@ FString UMultiplayerSessionsSubsystem::GetSessionAddress()
 		return TEXT("");
 
 	return Address;
+}
+
+bool UMultiplayerSessionsSubsystem::GetIsLanMatch() const
+{
+	return Online::GetSubsystem(GetWorld())->GetSubsystemName() == "NULL";
+}
+
+bool UMultiplayerSessionsSubsystem::GetOnlineSubsystemAvailable() const
+{
+	return Online::GetSubsystem(GetWorld()) != nullptr;
 }
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessfull)
